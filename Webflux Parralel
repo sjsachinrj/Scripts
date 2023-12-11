@@ -1,0 +1,75 @@
+public class WebClientExample {
+
+    private final WebClient webClient;
+
+    public WebClientExample() {
+        // Create an instance of WebClient
+        this.webClient = WebClient.create();
+    }
+
+    public Mono<Void> makeSequentialAndParallelCalls() {
+        // This method orchestrates the sequential and parallel calls
+
+        // Step 1: Make the first HTTP call
+        return makeFirstCall()
+                // Step 2: Upon completion of the first call, make the second call
+                .flatMap(this::makeSecondCall)
+                // Step 3: Process the response from the second call and make multiple parallel calls
+                .flatMapMany(this::processSecondResponse)
+                // Step 4: Upon completion of parallel calls, make the third call
+                .flatMap(this::makeThirdCall)
+                // Step 5: Return a Mono<Void> to represent completion
+                .then();
+    }
+
+    private Mono<String> makeFirstCall() {
+        // Method for making the first HTTP call
+        return webClient.get()
+                .uri("your_first_endpoint")
+                .retrieve()
+                .bodyToMono(String.class);
+    }
+
+    private Mono<String> makeSecondCall(String responseFromFirstCall) {
+        // Method for making the second HTTP call using the response from the first call
+        return webClient.post()
+                .uri("your_second_endpoint")
+                .bodyValue(responseFromFirstCall)
+                .retrieve()
+                .bodyToMono(String.class);
+    }
+
+    private Flux<String> processSecondResponse(String responseFromSecondCall) {
+        // Method to process the response from the second call and make multiple parallel calls
+        // Adjust this logic based on your requirements
+
+        // For illustration, using Flux.range to simulate making parallel calls
+        return Flux.range(1, 5)
+                .flatMap(index -> makeParallelCall(responseFromSecondCall, index));
+    }
+
+    private Mono<String> makeParallelCall(String responseFromSecondCall, int index) {
+        // Method for making parallel HTTP calls based on the response from the second call
+        return webClient.post()
+                .uri("your_parallel_endpoint/" + index)
+                .bodyValue(responseFromSecondCall)
+                .retrieve()
+                .bodyToMono(String.class);
+    }
+
+    private Mono<Void> makeThirdCall(String responseFromParallelCalls) {
+        // Method to make the third HTTP call using the aggregated response from parallel calls
+        return webClient.put()
+                .uri("your_third_endpoint")
+                .bodyValue(responseFromParallelCalls)
+                .retrieve()
+                .toBodilessEntity()
+                .then();
+    }
+
+    public static void main(String[] args) {
+        // Instantiate the WebClientExample and execute the sequential and parallel calls
+        WebClientExample example = new WebClientExample();
+        example.makeSequentialAndParallelCalls().block();
+    }
+}
