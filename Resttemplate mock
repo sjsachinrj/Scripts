@@ -1,0 +1,38 @@
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+
+public class MyServiceTest {
+
+    @Mock
+    private RestTemplate restTemplate;
+
+    @InjectMocks
+    private MyService myService;
+
+    @Test
+    public void testFetchData() {
+        // Arrange
+        String url = "https://example.com/api/data";
+        String responseBody = "Mocked Response";
+        ResponseEntity<String> mockedResponse = new ResponseEntity<>(responseBody, HttpStatus.OK);
+
+        Mockito.when(restTemplate.exchange(eq(url), eq(HttpMethod.GET), any(), eq(String.class)))
+               .thenReturn(mockedResponse);
+
+        // Act
+        String result = myService.fetchData(url);
+
+        // Assert
+        assertEquals(responseBody, result);
+    }
+}
