@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Function to check if a directory contains a Maven project
+function is_maven_project {
+  if [ -f "$1/pom.xml" ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+# Iterate through each child folder
+for dir in */; do
+  dir=${dir%*/}  # Remove trailing slash
+  if is_maven_project "$dir"; then
+    echo "Building Maven project in $dir"
+    cd "$dir" || exit
+    mvn clean install
+    cd ..
+  fi
+done
